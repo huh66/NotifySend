@@ -61,8 +61,10 @@ class SendMessageClient
         // Check required parameters
         if (showHelp || string.IsNullOrWhiteSpace(message) || string.IsNullOrWhiteSpace(ipv4))
         {
+            var executableName = OperatingSystem.IsWindows() ? "NotifySend.exe" : "NotifySend";
+            
             Console.WriteLine("Usage:");
-            Console.WriteLine("  NotifySend.exe MESSAGE=<Text> IPV4=<Address> [HEADER=<Text>] [LEVEL=INFO|WARN|ERROR] [SUBJECT=<Text>] [REFERENZ=<Number>] [PORT=<Number>]");
+            Console.WriteLine($"  {executableName} MESSAGE=<Text> IPV4=<Address> [HEADER=<Text>] [LEVEL=INFO|WARN|ERROR] [SUBJECT=<Text>] [REFERENZ=<Number>] [PORT=<Number>]");
             Console.WriteLine();
             Console.WriteLine("Parameters:");
             Console.WriteLine("  MESSAGE   (Required)  - Message text");
@@ -74,7 +76,7 @@ class SendMessageClient
             Console.WriteLine("  PORT      (Optional)  - Target port (default: 1526)");
             Console.WriteLine();
             Console.WriteLine("Example:");
-            Console.WriteLine("  NotifySend.exe MESSAGE=\"Test\" IPV4=127.0.0.1 LEVEL=ERROR PORT=15266");
+            Console.WriteLine($"  {executableName} MESSAGE=\"Test\" IPV4=127.0.0.1 LEVEL=ERROR PORT=15266");
             return;
         }
 
@@ -96,11 +98,11 @@ class SendMessageClient
                 var data = Encoding.UTF8.GetBytes(json);
                 stream.Write(data, 0, data.Length);
             }
-            Console.WriteLine("Nachricht gesendet.");
+            Console.WriteLine("Message sent.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Fehler beim Senden: {ex.Message}");
+            Console.WriteLine($"Error sending message: {ex.Message}");
         }
     }
 }

@@ -25,15 +25,31 @@ NotifySend is a simple console application that sends structured messages in JSO
 - Sending messages over TCP sockets
 - JSON message formatting
 - Configurable parameters (Header, Level, Subject, etc.)
-- German localization
+- Cross-platform support (Windows and Linux)
 - Simple command-line interface
 
 ## Prerequisites
 
 - .NET 8.0 or higher
-- Windows operating system
+- Windows or Linux operating system
 
 ## Installation
+
+### Install .NET 8.0 (if not already installed)
+
+**Windows:**
+Download and install from: https://dotnet.microsoft.com/download/dotnet/8.0
+
+**Linux (Ubuntu/Debian):**
+```bash
+wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+rm packages-microsoft-prod.deb
+sudo apt-get update
+sudo apt-get install -y dotnet-sdk-8.0
+```
+
+### Build and Run
 
 1. Clone repository:
 ```bash
@@ -48,15 +64,34 @@ dotnet build
 
 3. Create executable:
 ```bash
-dotnet publish -c Release
+# For Windows
+dotnet publish -c Release -r win-x64 --self-contained
+
+# For Linux
+dotnet publish -c Release -r linux-x64 --self-contained
+```
+
+4. Run the application:
+```bash
+# Windows
+NotifySend.exe MESSAGE="Test" IPV4=127.0.0.1
+
+# Linux
+./NotifySend MESSAGE="Test" IPV4=127.0.0.1
 ```
 
 ## Usage
 
 ### Syntax
 
+**Windows:**
 ```
 NotifySend.exe MESSAGE=<Text> IPV4=<Address> [Parameters...]
+```
+
+**Linux:**
+```
+./NotifySend MESSAGE=<Text> IPV4=<Address> [Parameters...]
 ```
 
 ### Parameters
@@ -75,17 +110,29 @@ NotifySend.exe MESSAGE=<Text> IPV4=<Address> [Parameters...]
 
 **Simple message:**
 ```bash
+# Windows
 NotifySend.exe MESSAGE="Test message" IPV4=127.0.0.1
+
+# Linux
+./NotifySend MESSAGE="Test message" IPV4=127.0.0.1
 ```
 
 **Message with all parameters:**
 ```bash
+# Windows
 NotifySend.exe MESSAGE="Error occurred" IPV4=192.168.1.100 LEVEL=ERROR HEADER="SYSTEM" SUBJECT="Critical Error" REFERENZ=12345 PORT=8080
+
+# Linux
+./NotifySend MESSAGE="Error occurred" IPV4=192.168.1.100 LEVEL=ERROR HEADER="SYSTEM" SUBJECT="Critical Error" REFERENZ=12345 PORT=8080
 ```
 
 **Show help:**
 ```bash
+# Windows
 NotifySend.exe --help
+
+# Linux
+./NotifySend --help
 ```
 
 ## JSON Message Format
@@ -129,8 +176,15 @@ dotnet build
 # Release version
 dotnet build -c Release
 
-# Publishing
+# Publishing for Windows
 dotnet publish -c Release -r win-x64 --self-contained
+
+# Publishing for Linux
+dotnet publish -c Release -r linux-x64 --self-contained
+
+# Publishing for multiple platforms
+dotnet publish -c Release -r win-x64 --self-contained
+dotnet publish -c Release -r linux-x64 --self-contained
 ```
 
 ## License
@@ -142,6 +196,12 @@ This project is licensed under the MIT License. See LICENSE file for details.
 Contributions are welcome! Please create a Pull Request or report bugs via the Issues function.
 
 ## Changelog
+
+### Version 1.1.0
+- Added Linux support
+- Cross-platform compatibility
+- Updated help text for both platforms
+- English localization
 
 ### Version 1.0.0
 - Initial version
