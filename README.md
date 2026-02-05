@@ -1,6 +1,6 @@
 # NotifySend
 
-A C# Windows command-line program for sending messages over TCP sockets.
+A cross-platform command-line tool for sending messages over TCP sockets, available in both C# (.NET) and Python implementations.
 
 #### Check NotifyPanel for receiving notifications from NotifySend
 
@@ -27,15 +27,62 @@ NotifySend is a simple console application that sends structured messages in JSO
 - Configurable parameters (Header, Level, Subject, etc.)
 - Cross-platform support (Windows and Linux)
 - Simple command-line interface
+- **Python client with desktop notification support for Linux**
+
+## Implementations
+
+### C# Client (Windows/Linux)
+- .NET 8.0 based implementation
+- Native cross-platform support
+- Optimized for Windows environments
+
+### Python Client (Linux)
+- Pure Python implementation with **unique generator-coroutine architecture**
+- Desktop notification support using `plyer`
+- Unconventional pipeline design with marinated coroutines
+- Generator-based byte streaming for TCP communication
+- Lightweight and easy to install
+- Ideal for Linux environments
 
 ## Prerequisites
 
+### C# Client
 - .NET 8.0 or higher
 - Windows or Linux operating system
 
+### Python Client
+- Python 3.6 or higher
+- Linux operating system (for desktop notifications)
+- Optional: `plyer` library for desktop notifications
+
 ## Installation
 
-### Install .NET 8.0 (if not already installed)
+### Python Client Installation
+
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Make executable:
+```bash
+chmod +x notify_send.py
+```
+
+3. Run directly:
+```bash
+./notify_send.py MESSAGE="Test" IPV4=127.0.0.1
+```
+
+4. Or install as package:
+```bash
+pip install -e .
+notify_send MESSAGE="Test" IPV4=127.0.0.1
+```
+
+### C# Client Installation
+
+#### Install .NET 8.0 (if not already installed)
 
 **Windows:**
 Download and install from: https://dotnet.microsoft.com/download/dotnet/8.0
@@ -49,7 +96,7 @@ sudo apt-get update
 sudo apt-get install -y dotnet-sdk-8.0
 ```
 
-### Build and Run
+### C# Client Build and Run
 
 1. Clone repository:
 ```bash
@@ -82,7 +129,25 @@ NotifySend.exe MESSAGE="Test" IPV4=127.0.0.1
 
 ## Usage
 
-### Syntax
+### Python Client
+
+**Remote Mode (TCP):**
+```bash
+./notify_send.py MESSAGE="Test message" IPV4=127.0.0.1
+./notify_send.py MESSAGE="Error!" IPV4=192.168.1.5 LEVEL=ERROR PORT=8080
+```
+
+**Local Desktop Notification Mode:**
+```bash
+./notify_send.py --notify MESSAGE="Task complete" TITLE="Success"
+```
+
+**Show help:**
+```bash
+./notify_send.py --help
+```
+
+### C# Client Syntax
 
 **Windows:**
 ```
@@ -94,7 +159,9 @@ NotifySend.exe MESSAGE=<Text> IPV4=<Address> [Parameters...]
 ./NotifySend MESSAGE=<Text> IPV4=<Address> [Parameters...]
 ```
 
-### Parameters
+## Parameters
+
+Both Python and C# clients use the same parameter format:
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
@@ -104,35 +171,42 @@ NotifySend.exe MESSAGE=<Text> IPV4=<Address> [Parameters...]
 | `LEVEL` | String | No | "INFO" | Log level (INFO, WARN, ERROR) |
 | `SUBJECT` | String | No | "" | Message subject |
 | `REFERENZ` | Integer | No | 0 | Reference number |
-| `PORT` | Integer | No | 1526 | Target port |
+|  | `TITLE` | String | Yes (--notify) | - | Notification title (Python client only) |
+
+**Python Client Specific:**
+- Supports `--notify` flag for local desktop notifications
+- Requires both `TITLE` and `MESSAGE` when using `--notify`
 
 ### Examples
 
-**Simple message:**
+**Python Client - TCP Mode:**
+```bash
+# Simple message
+./notify_send.py MESSAGE="Test message" IPV4=127.0.0.1
+
+# With parameters
+./notify_send.py MESSAGE="Error occurred" IPV4=192.168.1.100 LEVEL=ERROR HEADER="SYSTEM" SUBJECT="Critical Error" REFERENZ=12345 PORT=8080
+```
+
+**Python Client - Desktop Notification Mode:**
+```bash
+# Local notification
+./notify_send.py --notify TITLE="Build Complete" MESSAGE="All tests passed"
+
+# Help
+./notify_send.py --help
+```
+
+**C# Client:**
 ```bash
 # Windows
 NotifySend.exe MESSAGE="Test message" IPV4=127.0.0.1
 
 # Linux
 ./NotifySend MESSAGE="Test message" IPV4=127.0.0.1
-```
 
-**Message with all parameters:**
-```bash
-# Windows
+# Message with all parameters
 NotifySend.exe MESSAGE="Error occurred" IPV4=192.168.1.100 LEVEL=ERROR HEADER="SYSTEM" SUBJECT="Critical Error" REFERENZ=12345 PORT=8080
-
-# Linux
-./NotifySend MESSAGE="Error occurred" IPV4=192.168.1.100 LEVEL=ERROR HEADER="SYSTEM" SUBJECT="Critical Error" REFERENZ=12345 PORT=8080
-```
-
-**Show help:**
-```bash
-# Windows
-NotifySend.exe --help
-
-# Linux
-./NotifySend --help
 ```
 
 ## JSON Message Format
@@ -161,11 +235,30 @@ The program sends messages in the following JSON format:
 
 ```
 NotifySend/
-├── NotifySend.cs          # Main program
+├── NotifySend.cs          # C# implementation
 ├── NotifySend.csproj      # Project file
 ├── NotifySend.sln         # Visual Studio Solution
+├── notify_send.py         # Python implementation
+├── requirements.txt       # Python dependencies
+├── setup.py               # Python package setup
 └── README.md              # This file
 ```
+
+### Python Architecture
+
+The Python client uses a unique **generator-coroutine pipeline architecture**:
+
+- **Coroutine Sandwich System**: Validators use primed coroutines for state transformations
+- **Generator-Based Streaming**: Byte transmission via generators for chunked socket operations
+- **Culinary Naming Convention**: Unconventional variable naming for code uniqueness
+- **Pipeline Processing**: Data flows through validation coroutines before transmission
+
+Key Components:
+- `marinate_coroutine`: Decorator that primes coroutines for immediate use
+- `tuna_sandwich_validator`: Coroutine for LEVEL validation
+- `pretzel_number_cruncher`: Coroutine for integer parsing
+- `catapult_bytes_generator`: Generator-based TCP transmission
+- `toast_local_bagel`: Desktop notification handler
 
 ### Compilation
 
@@ -197,8 +290,15 @@ Contributions are welcome! Please create a Pull Request or report bugs via the I
 
 ## Changelog
 
+### Version 1.2.0
+- Added Python client implementation for Linux
+- Desktop notification support via plyer
+- Generator-coroutine pipeline architecture
+- Dual-mode operation (TCP remote + local notification)
+- Setup script for easy Python installation
+
 ### Version 1.1.0
-- Added Linux support
+- Added Linux support for C# client
 - Cross-platform compatibility
 - Updated help text for both platforms
 - English localization
