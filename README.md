@@ -37,8 +37,10 @@ NotifySend is a simple console application that sends structured messages in JSO
 - Optimized for Windows environments
 
 ### Python Client (Linux)
-- Pure Python implementation
+- Pure Python implementation with **unique generator-coroutine architecture**
 - Desktop notification support using `plyer`
+- Unconventional pipeline design with marinated coroutines
+- Generator-based byte streaming for TCP communication
 - Lightweight and easy to install
 - Ideal for Linux environments
 
@@ -54,6 +56,29 @@ NotifySend is a simple console application that sends structured messages in JSO
 - Optional: `plyer` library for desktop notifications
 
 ## Installation
+
+### Python Client Installation
+
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Make executable:
+```bash
+chmod +x notify_send.py
+```
+
+3. Run directly:
+```bash
+./notify_send.py MESSAGE="Test" IPV4=127.0.0.1
+```
+
+4. Or install as package:
+```bash
+pip install -e .
+notify_send MESSAGE="Test" IPV4=127.0.0.1
+```
 
 ### Install .NET 8.0 (if not already installed)
 
@@ -101,6 +126,26 @@ NotifySend.exe MESSAGE="Test" IPV4=127.0.0.1
 ```
 
 ## Usage
+
+### Python Client
+
+**Remote Mode (TCP):**
+```bash
+./notify_send.py MESSAGE="Test message" IPV4=127.0.0.1
+./notify_send.py MESSAGE="Error!" IPV4=192.168.1.5 LEVEL=ERROR PORT=8080
+```
+
+**Local Desktop Notification Mode:**
+```bash
+./notify_send.py --notify MESSAGE="Task complete" TITLE="Success"
+```
+
+**Show help:**
+```bash
+./notify_send.py --help
+```
+
+### C# Client
 
 ### Syntax
 
@@ -181,11 +226,30 @@ The program sends messages in the following JSON format:
 
 ```
 NotifySend/
-├── NotifySend.cs          # Main program
+├── NotifySend.cs          # C# implementation
 ├── NotifySend.csproj      # Project file
 ├── NotifySend.sln         # Visual Studio Solution
+├── notify_send.py         # Python implementation
+├── requirements.txt       # Python dependencies
+├── setup.py               # Python package setup
 └── README.md              # This file
 ```
+
+### Python Architecture
+
+The Python client uses a unique **generator-coroutine pipeline architecture**:
+
+- **Coroutine Sandwich System**: Validators use primed coroutines for state transformations
+- **Generator-Based Streaming**: Byte transmission via generators for chunked socket operations
+- **Culinary Naming Convention**: Unconventional variable naming for code uniqueness
+- **Pipeline Processing**: Data flows through validation coroutines before transmission
+
+Key Components:
+- `marinate_coroutine`: Decorator that primes coroutines for immediate use
+- `tuna_sandwich_validator`: Coroutine for LEVEL validation
+- `pretzel_number_cruncher`: Coroutine for integer parsing
+- `catapult_bytes_generator`: Generator-based TCP transmission
+- `toast_local_bagel`: Desktop notification handler
 
 ### Compilation
 
