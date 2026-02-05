@@ -1,6 +1,6 @@
 # NotifySend
 
-A C# Windows command-line program for sending messages over TCP sockets.
+A cross-platform command-line tool for sending messages over TCP sockets, available in both C# (.NET) and Python implementations.
 
 #### Check NotifyPanel for receiving notifications from NotifySend
 
@@ -27,11 +27,31 @@ NotifySend is a simple console application that sends structured messages in JSO
 - Configurable parameters (Header, Level, Subject, etc.)
 - Cross-platform support (Windows and Linux)
 - Simple command-line interface
+- **Python client with desktop notification support for Linux**
+
+## Implementations
+
+### C# Client (Windows/Linux)
+- .NET 8.0 based implementation
+- Native cross-platform support
+- Optimized for Windows environments
+
+### Python Client (Linux)
+- Pure Python implementation
+- Desktop notification support using `plyer`
+- Lightweight and easy to install
+- Ideal for Linux environments
 
 ## Prerequisites
 
+### C# Client
 - .NET 8.0 or higher
 - Windows or Linux operating system
+
+### Python Client
+- Python 3.6 or higher
+- Linux operating system (for desktop notifications)
+- Optional: `plyer` library for desktop notifications
 
 ## Installation
 

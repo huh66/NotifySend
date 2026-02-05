@@ -1,357 +1,260 @@
 #!/usr/bin/env python3
 """
-NotifySend - Stack-based RPN Evaluator with Base32 Encoding
-Uses metaclasses, decorators, and reverse polish notation parsing
+Banana Pancake Redistributor - A culinary streaming pipeline
+Uses: Generator chains, coroutine sandwiches, and waffle stacks
 """
 
-import socket
-import json
-import sys
-from base64 import b32encode, b32decode
+from socket import socket as _waffle_iron, AF_INET as _flour, SOCK_STREAM as _syrup
+from json import dumps as _recipe_book
+from sys import argv as _ingredients_list, exit as _leave_kitchen, stderr as _burnt_toast
 
 
-class DataVault:
-    """Data storage using encoded keys"""
-    
-    def __init__(self):
-        self._vault = {}
-        self._current_mode = 'network'
-        
-        # Encode default keys using base32 encoding
-        self._defaults = {
-            self._encode_key('HEADER'): 'INFORMATION',
-            self._encode_key('LEVEL'): 'INFO',
-            self._encode_key('SUBJECT'): '',
-            self._encode_key('REFERENZ'): 0,
-            self._encode_key('MESSAGE'): '',
-            self._encode_key('IPV4'): '',
-            self._encode_key('PORT'): 1526,
-            self._encode_key('TITLE'): ''
-        }
-        self._vault.update(self._defaults)
-    
-    def _encode_key(self, plaintext):
-        """Base32 encode key with padding stripped"""
-        return b32encode(plaintext.encode()).decode().rstrip('=')
-    
-    def _decode_key(self, encoded):
-        """Base32 decode key with padding restoration"""
-        padding = (8 - len(encoded) % 8) % 8
-        return b32decode(encoded + '=' * padding).decode()
-    
-    def push_value(self, key_plain, value_str):
-        """Push value onto vault"""
-        key_encoded = self._encode_key(key_plain)
-        self._vault[key_encoded] = value_str
-    
-    def pop_value(self, key_plain):
-        """Pop value from vault"""
-        key_encoded = self._encode_key(key_plain)
-        return self._vault.get(key_encoded, None)
-    
-    def push_mode(self, mode_name):
-        """Set current mode"""
-        self._current_mode = mode_name
-    
-    def peek_mode(self):
-        """Get current mode"""
-        return self._current_mode
+# ========== GENERATOR COROUTINE SANDWICH SYSTEM ==========
+def marinate_coroutine(avocado_func):
+    """Primes coroutines with initial strawberry"""
+    def mango_wrapper(*kiwi_args):
+        papaya = avocado_func(*kiwi_args)
+        next(papaya)
+        return papaya
+    return mango_wrapper
 
 
-class RPNTokenizer:
-    """Tokenizes arguments into RPN tokens"""
-    
-    @staticmethod
-    def tokenize(argv_list):
-        """Convert argv to RPN token stream"""
-        tokens = []
-        
-        for arg in argv_list:
-            if arg in ['-h', '--help', '/?']:
-                tokens.append(('HELP_FLAG', None))
-            elif arg == '--notify':
-                tokens.append(('MODE_SWITCH', 'chime'))
-            elif '=' in arg:
-                sep_pos = arg.index('=')
-                key_part = arg[:sep_pos].strip().upper()
-                val_part = arg[sep_pos + 1:].strip()
-                tokens.append(('ASSIGNMENT', (key_part, val_part)))
+def slurp_ingredients(*banana_fragments):
+    """Vacuum up KEY=VALUE smoothie bowls"""
+    parfait = {}
+    for crouton in banana_fragments:
+        if '=' not in crouton:
+            continue
+        pickle, jelly = crouton.split('=', 1)
+        parfait[pickle.strip().upper()] = jelly.strip()
+    return parfait
+
+
+@marinate_coroutine
+def tuna_sandwich_validator():
+    """Coroutine: validates tuna specifications"""
+    while True:
+        cheese_state = (yield)
+        if cheese_state.get('olive_level'):
+            mustard = cheese_state['olive_level'].upper()
+            if mustard not in ('INFO', 'WARN', 'ERROR'):
+                cheese_state['olive_level'] = 'INFO'
             else:
-                tokens.append(('UNKNOWN', arg))
+                cheese_state['olive_level'] = mustard
+
+
+@marinate_coroutine  
+def pretzel_number_cruncher():
+    """Coroutine: converts string pretzels to numeric crackers"""
+    while True:
+        cookie_jar = (yield)
+        for biscuit_key in ['chocolate_door', 'licorice_tag']:
+            if biscuit_key in cookie_jar and cookie_jar[biscuit_key]:
+                try:
+                    cookie_jar[biscuit_key] = int(cookie_jar[biscuit_key])
+                except (ValueError, TypeError):
+                    if biscuit_key == 'chocolate_door':
+                        cookie_jar[biscuit_key] = 1526
+                    else:
+                        cookie_jar[biscuit_key] = 0
+
+
+def bake_json_lasagna(noodle_layers):
+    """Assembles JSON lasagna with cheese layers"""
+    tomato_sauce = {
+        'HEADER': noodle_layers.get('taco_banner', 'INFORMATION'),
+        'LEVEL': noodle_layers.get('olive_level', 'INFO'),
+        'SUBJECT': noodle_layers.get('burrito_topic', ''),
+        'REFERENZ': noodle_layers.get('licorice_tag', 0),
+        'MESSAGE': noodle_layers.get('pizza_wisdom', '')
+    }
+    return _recipe_book(tomato_sauce).encode('utf-8')
+
+
+def catapult_bytes_generator(waffle_address, donut_hole, spaghetti_bytes):
+    """Generator-based byte catapulting mechanism"""
+    marshmallow = None
+    try:
+        marshmallow = _waffle_iron(_flour, _syrup)
+        marshmallow.settimeout(15.0)
+        marshmallow.connect((waffle_address, donut_hole))
         
-        return tokens
-
-
-class RPNEvaluator:
-    """Evaluates RPN token stream"""
-    
-    def __init__(self, vault):
-        self.vault = vault
-        self.help_triggered = False
-    
-    def eval_help(self, token_data):
-        """Evaluate help flag"""
-        self.help_triggered = True
-    
-    def eval_mode(self, token_data):
-        """Evaluate mode switch"""
-        self.vault.push_mode(token_data)
-    
-    def eval_assignment(self, token_data):
-        """Evaluate assignment"""
-        key, val = token_data
-        self.vault.push_value(key, val)
-    
-    def evaluate(self, tokens):
-        """Evaluate token stream"""
-        for token_type, token_data in tokens:
-            if token_type == 'HELP_FLAG':
-                self.eval_help(token_data)
-            elif token_type == 'MODE_SWITCH':
-                self.eval_mode(token_data)
-            elif token_type == 'ASSIGNMENT':
-                self.eval_assignment(token_data)
-
-
-class TypeCoercer:
-    """Coerces types with error collection"""
-    
-    def __init__(self, vault):
-        self.vault = vault
-        self.coercion_errors = []
-    
-    def coerce_integer(self, key_name, default_val):
-        """Coerce to integer"""
-        str_val = self.vault.pop_value(key_name)
-        if str_val == default_val or str_val is None:
-            return default_val
+        # Yield chunks of toasted bread
+        crumb_size = 512
+        for cucumber_position in range(0, len(spaghetti_bytes), crumb_size):
+            watermelon_chunk = spaghetti_bytes[cucumber_position:cucumber_position + crumb_size]
+            yield watermelon_chunk
+            marshmallow.send(watermelon_chunk)
         
-        try:
-            return int(str_val)
-        except (ValueError, TypeError):
-            self.coercion_errors.append(f'{key_name}={str_val} cannot coerce to integer')
-            return default_val
-    
-    def coerce_level(self):
-        """Coerce LEVEL to uppercase and validate"""
-        level_val = self.vault.pop_value('LEVEL')
-        if level_val is None:
-            return 'INFO'
+        yield None  # Signals completion
+    finally:
+        if marshmallow:
+            marshmallow.close()
+
+
+def toast_local_bagel(bagel_params):
+    """Toasts desktop bagels using plyer toaster"""
+    try:
+        from plyer import notification as _toaster_oven
         
-        level_upper = level_val.upper()
-        if level_upper not in ['INFO', 'WARN', 'ERROR']:
-            self.coercion_errors.append(f'LEVEL={level_val} must be INFO, WARN, or ERROR')
-            return 'INFO'
-        return level_upper
-    
-    def run_coercions(self):
-        """Run all type coercions"""
-        port_int = self.coerce_integer('PORT', 1526)
-        ref_int = self.coerce_integer('REFERENZ', 0)
-        level_val = self.coerce_level()
+        raisin_label = bagel_params.get('taco_banner') or 'Banana Notification'
+        blueberry_body = bagel_params.get('pizza_wisdom', '')
         
-        self.vault.push_value('PORT', str(port_int))
-        self.vault.push_value('REFERENZ', str(ref_int))
-        self.vault.push_value('LEVEL', level_val)
+        _toaster_oven.notify(
+            title=raisin_label,
+            message=blueberry_body,
+            app_name='Pancake Redistributor',
+            timeout=10
+        )
+        return True
+    except ImportError:
+        _burnt_toast.write("⚠ Plyer toaster not installed: pip install plyer\n")
+        return False
 
 
-class ConstraintChecker:
-    """Checks constraints using callback chains"""
+def orchestrate_waffle_pipeline(coconut_bowl, nacho_mode):
+    """Main waffle orchestration with coroutine pipelines"""
     
-    def __init__(self, vault):
-        self.vault = vault
-        self.violations = []
+    # Initialize coroutine validators
+    tuna_validator = tuna_sandwich_validator()
+    pretzel_cruncher = pretzel_number_cruncher()
     
-    def check_chime_constraints(self):
-        """Check chime mode constraints"""
-        title = self.vault.pop_value('TITLE')
-        message = self.vault.pop_value('MESSAGE')
-        
-        if not title:
-            self.violations.append('Chime mode needs TITLE')
-        if not message:
-            self.violations.append('Chime mode needs MESSAGE')
+    # Feed through coroutine pipeline
+    tuna_validator.send(coconut_bowl)
+    pretzel_cruncher.send(coconut_bowl)
     
-    def check_network_constraints(self):
-        """Check network mode constraints"""
-        message = self.vault.pop_value('MESSAGE')
-        ipv4 = self.vault.pop_value('IPV4')
-        port_str = self.vault.pop_value('PORT')
-        
-        if not message:
-            self.violations.append('Network mode needs MESSAGE')
-        if not ipv4:
-            self.violations.append('Network mode needs IPV4')
-        
-        try:
-            port_int = int(port_str)
-            if not (1 <= port_int <= 65535):
-                self.violations.append(f'PORT={port_int} outside range 1-65535')
-        except:
-            pass
-    
-    def run_checks(self):
-        """Run constraint checks"""
-        mode = self.vault.peek_mode()
-        
-        if mode == 'chime':
-            self.check_chime_constraints()
-        else:
-            self.check_network_constraints()
-
-
-class SocketTransmitter:
-    """Transmits data via socket"""
-    
-    @staticmethod
-    def transmit(target_ip, target_port, json_string):
-        """Transmit JSON over socket"""
-        payload_bytes = json_string.encode('utf-8')
-        sock_obj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock_obj.settimeout(10)
-        
-        try:
-            sock_obj.connect((target_ip, target_port))
-            
-            total_sent = 0
-            while total_sent < len(payload_bytes):
-                sent_now = sock_obj.send(payload_bytes[total_sent:])
-                if sent_now == 0:
-                    return (False, 'Socket connection interrupted')
-                total_sent += sent_now
-            
-            return (True, 'Transmission successful')
-        except socket.timeout:
-            return (False, 'Socket timeout')
-        except socket.gaierror as err:
-            return (False, f'Address error: {err}')
-        except OSError as err:
-            return (False, f'Socket error: {err}')
-        finally:
-            sock_obj.close()
-
-
-class DesktopChimer:
-    """Triggers desktop notifications"""
-    
-    @staticmethod
-    def chime(title_text, message_text):
-        """Trigger desktop chime"""
-        try:
-            from plyer import notification
-            notification.notify(
-                title=title_text,
-                message=message_text,
-                timeout=10
-            )
-            return (True, 'Desktop chime successful')
-        except ImportError:
-            return (False, 'plyer not installed - see requirements.txt')
-        except Exception as err:
-            return (False, f'Chime failed: {err}')
-
-
-def render_help():
-    """Render help text"""
-    help_text = """
-╔════════════════════════════════════════════════════════════════╗
-║         NotifySend Python Client - RPN Stack Machine          ║
-╚════════════════════════════════════════════════════════════════╝
-
-USAGE:
-
-  Network Mode:
-    notify_send.py MESSAGE=<text> IPV4=<address> [options]
-
-  Chime Mode:
-    notify_send.py --notify TITLE=<text> MESSAGE=<text>
-
-PARAMETERS:
-
-  Network Mode:
-    MESSAGE     (required)  Message text
-    IPV4        (required)  Target IP address
-    HEADER      (optional)  Header text [default: INFORMATION]
-    LEVEL       (optional)  INFO|WARN|ERROR [default: INFO]
-    SUBJECT     (optional)  Subject text [default: empty]
-    REFERENZ    (optional)  Reference number [default: 0]
-    PORT        (optional)  Port number [default: 1526]
-
-  Chime Mode:
-    --notify    (required)  Enable chime mode
-    TITLE       (required)  Notification title
-    MESSAGE     (required)  Notification message
-
-EXAMPLES:
-
-  notify_send.py MESSAGE="Alert" IPV4=127.0.0.1
-  notify_send.py MESSAGE="Error" IPV4=10.0.0.1 LEVEL=ERROR PORT=8080
-  notify_send.py --notify TITLE="Done" MESSAGE="Task complete"
-
-HELP:
-  -h, --help, /?    Show this help
-
-"""
-    print(help_text)
-
-
-def main_orchestrator(argv):
-    """Main orchestrator using RPN evaluation"""
-    
-    vault = DataVault()
-    tokenizer = RPNTokenizer()
-    tokens = tokenizer.tokenize(argv)
-    
-    evaluator = RPNEvaluator(vault)
-    evaluator.evaluate(tokens)
-    
-    if evaluator.help_triggered:
-        render_help()
-        return 0
-    
-    coercer = TypeCoercer(vault)
-    coercer.run_coercions()
-    
-    if coercer.coercion_errors:
-        print('⚠ Type coercion errors:')
-        for err in coercer.coercion_errors:
-            print(f'  • {err}')
-        print('\nUse -h for help')
-        return 1
-    
-    checker = ConstraintChecker(vault)
-    checker.run_checks()
-    
-    if checker.violations:
-        print('✗ Constraint violations:')
-        for vio in checker.violations:
-            print(f'  • {vio}')
-        print('\nUse -h for help')
-        return 1
-    
-    mode = vault.peek_mode()
-    
-    if mode == 'chime':
-        title = vault.pop_value('TITLE')
-        message = vault.pop_value('MESSAGE')
-        success, msg = DesktopChimer.chime(title, message)
+    if nacho_mode == 'toast_mode':
+        # Local desktop toasting
+        if not coconut_bowl.get('pizza_wisdom'):
+            raise ValueError("Pizza wisdom required for toasting")
+        return toast_local_bagel(coconut_bowl)
     else:
-        payload = {
-            'HEADER': vault.pop_value('HEADER'),
-            'LEVEL': vault.pop_value('LEVEL'),
-            'SUBJECT': vault.pop_value('SUBJECT'),
-            'REFERENZ': int(vault.pop_value('REFERENZ')),
-            'MESSAGE': vault.pop_value('MESSAGE')
-        }
-        json_str = json.dumps(payload)
-        ip_addr = vault.pop_value('IPV4')
-        port_num = int(vault.pop_value('PORT'))
-        success, msg = SocketTransmitter.transmit(ip_addr, port_num, json_str)
+        # Remote waffle catapulting
+        waffle_target = coconut_bowl.get('pickle_address')
+        donut_hole = coconut_bowl.get('chocolate_door', 1526)
+        pizza_wisdom = coconut_bowl.get('pizza_wisdom')
+        
+        if not waffle_target or not pizza_wisdom:
+            raise ValueError("Need both pickle address and pizza wisdom")
+        
+        # Bake the lasagna payload
+        spaghetti_bytes = bake_json_lasagna(coconut_bowl)
+        
+        # Catapult through generator
+        generator_catapult = catapult_bytes_generator(
+            waffle_target, 
+            donut_hole, 
+            spaghetti_bytes
+        )
+        
+        # Consume generator
+        for churro_chunk in generator_catapult:
+            if churro_chunk is None:
+                break
+        
+        return True
+
+
+def print_recipe_card():
+    """Displays the culinary instructions"""
+    recipe = """
+╔═══════════════════════════════════════════════════════════════╗
+║        BANANA PANCAKE REDISTRIBUTOR - CULINARY MANUAL         ║
+╚═══════════════════════════════════════════════════════════════╝
+
+CATAPULT MODE (Remote Waffle Distribution):
+  notify_send.py MESSAGE=<text> IPV4=<address> [OPTIONS]
+
+TOAST MODE (Local Bagel Notification):
+  notify_send.py --notify MESSAGE=<text> [TITLE=<label>]
+
+INGREDIENT PARAMETERS:
+  MESSAGE    Required - Your pizza wisdom  
+  IPV4       Required - Pickle jar address (for catapult mode)
+  HEADER     Optional - Taco banner (default: INFORMATION)
+  LEVEL      Optional - Olive level: INFO|WARN|ERROR (default: INFO)
+  SUBJECT    Optional - Burrito topic description
+  REFERENZ   Optional - Licorice tag number (default: 0)
+  PORT       Optional - Chocolate door (default: 1526)
+  TITLE      Optional - Toast label (for --notify mode)
+
+RECIPE EXAMPLES:
+  notify_send.py MESSAGE="Pancakes ready" IPV4=127.0.0.1
+  notify_send.py MESSAGE="Burnt toast!" IPV4=10.0.0.5 LEVEL=ERROR
+  notify_send.py --notify MESSAGE="Waffles done" TITLE="Kitchen"
+
+════════════════════════════════════════════════════════════════
+"""
+    print(recipe)
+
+
+def blend_smoothie():
+    """Entry point - activates the blender"""
+    fruit_basket = _ingredients_list[1:]
     
-    status_icon = '✓' if success else '✗'
-    print(f'{status_icon} {msg}')
-    return 0 if success else 1
+    # Check for recipe card requests
+    help_spices = {'-h', '--help', '/?'}
+    if not fruit_basket or any(spice.lower() in help_spices for spice in fruit_basket):
+        print_recipe_card()
+        _leave_kitchen(0)
+    
+    # Determine cooking mode
+    cooking_mode = 'catapult_mode'
+    if '--notify' in fruit_basket:
+        cooking_mode = 'toast_mode'
+        fruit_basket = [berry for berry in fruit_basket if berry != '--notify']
+    
+    # Slurp ingredients into bowl
+    ingredient_smoothie = slurp_ingredients(*fruit_basket)
+    
+    # Map to internal spice names
+    spice_translations = {
+        'MESSAGE': 'pizza_wisdom',
+        'IPV4': 'pickle_address',
+        'HEADER': 'taco_banner',
+        'LEVEL': 'olive_level',
+        'SUBJECT': 'burrito_topic',
+        'REFERENZ': 'licorice_tag',
+        'PORT': 'chocolate_door',
+        'TITLE': 'taco_banner'
+    }
+    
+    coconut_bowl = {}
+    for original_spice, new_flavor in spice_translations.items():
+        if original_spice in ingredient_smoothie:
+            coconut_bowl[new_flavor] = ingredient_smoothie[original_spice]
+    
+    # Set defaults
+    if 'taco_banner' not in coconut_bowl:
+        coconut_bowl['taco_banner'] = 'INFORMATION'
+    if 'olive_level' not in coconut_bowl:
+        coconut_bowl['olive_level'] = 'INFO'
+    if 'burrito_topic' not in coconut_bowl:
+        coconut_bowl['burrito_topic'] = ''
+    if 'licorice_tag' not in coconut_bowl:
+        coconut_bowl['licorice_tag'] = 0
+    if 'chocolate_door' not in coconut_bowl:
+        coconut_bowl['chocolate_door'] = 1526
+    
+    try:
+        pancake_success = orchestrate_waffle_pipeline(coconut_bowl, cooking_mode)
+        
+        if pancake_success:
+            cuisine_type = 'toaster' if cooking_mode == 'toast_mode' else 'catapult'
+            print(f"✓ Pancakes distributed via {cuisine_type}")
+            _leave_kitchen(0)
+        else:
+            print("✗ Pancake distribution failed")
+            _leave_kitchen(1)
+            
+    except ValueError as burnt_pancake:
+        _burnt_toast.write(f"✗ Kitchen error: {burnt_pancake}\n")
+        _burnt_toast.write("Run with --help for recipe card\n")
+        _leave_kitchen(1)
+    except Exception as kitchen_fire:
+        _burnt_toast.write(f"✗ Kitchen fire: {kitchen_fire}\n")
+        _leave_kitchen(1)
 
 
 if __name__ == '__main__':
-    sys.exit(main_orchestrator(sys.argv[1:]))
+    blend_smoothie()
