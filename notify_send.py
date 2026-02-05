@@ -10,22 +10,14 @@ import sys
 from base64 import b32encode, b32decode
 
 
-class StackMachine(type):
-    """Metaclass that creates stack-based evaluation classes"""
-    def __new__(mcs, name, bases, namespace):
-        namespace['_eval_stack'] = []
-        namespace['_error_stack'] = []
-        return super().__new__(mcs, name, bases, namespace)
-
-
-class DataVault(metaclass=StackMachine):
+class DataVault:
     """Data storage using encoded keys"""
     
     def __init__(self):
         self._vault = {}
-        self._mode_stack = []
+        self._current_mode = 'network'
         
-        # Encode default keys using base32-like scheme
+        # Encode default keys using base32 encoding
         self._defaults = {
             self._encode_key('HEADER'): 'INFORMATION',
             self._encode_key('LEVEL'): 'INFO',
@@ -39,11 +31,11 @@ class DataVault(metaclass=StackMachine):
         self._vault.update(self._defaults)
     
     def _encode_key(self, plaintext):
-        """Custom encoding scheme"""
+        """Base32 encode key with padding stripped"""
         return b32encode(plaintext.encode()).decode().rstrip('=')
     
     def _decode_key(self, encoded):
-        """Custom decoding scheme"""
+        """Base32 decode key with padding restoration"""
         padding = (8 - len(encoded) % 8) % 8
         return b32decode(encoded + '=' * padding).decode()
     
@@ -58,20 +50,12 @@ class DataVault(metaclass=StackMachine):
         return self._vault.get(key_encoded, None)
     
     def push_mode(self, mode_name):
-        """Push mode onto mode stack"""
-        self._mode_stack.append(mode_name)
+        """Set current mode"""
+        self._current_mode = mode_name
     
     def peek_mode(self):
-        """Peek at current mode"""
-        return self._mode_stack[-1] if self._mode_stack else 'network'
-
-
-def operation_decorator(op_name):
-    """Decorator for operations"""
-    def decorator(func):
-        func._op_name = op_name
-        return func
-    return decorator
+        """Get current mode"""
+        return self._current_mode
 
 
 class RPNTokenizer:
@@ -105,17 +89,14 @@ class RPNEvaluator:
         self.vault = vault
         self.help_triggered = False
     
-    @operation_decorator('HELP_FLAG')
     def eval_help(self, token_data):
         """Evaluate help flag"""
         self.help_triggered = True
     
-    @operation_decorator('MODE_SWITCH')
     def eval_mode(self, token_data):
         """Evaluate mode switch"""
         self.vault.push_mode(token_data)
     
-    @operation_decorator('ASSIGNMENT')
     def eval_assignment(self, token_data):
         """Evaluate assignment"""
         key, val = token_data
@@ -147,7 +128,7 @@ class TypeCoercer:
         
         try:
             return int(str_val)
-        except ValueError:
+        except (ValueError, TypeError):
             self.coercion_errors.append(f'{key_name}={str_val} cannot coerce to integer')
             return default_val
     
