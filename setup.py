@@ -1,9 +1,9 @@
 from setuptools import setup
 
 setup(
-    name='banana-pancake-redistributor',
+    name='notifysend-python',
     version='1.0.0',
-    description='Culinary streaming pipeline for message distribution',
+    description='Python client for NotifySend message distribution',
     py_modules=['notify_send'],
     install_requires=['plyer>=2.0.0'],
     entry_points={
